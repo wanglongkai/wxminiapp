@@ -1,0 +1,18 @@
+packages: []
+
+# 只选择项目本地链接目录；包级 skills 权限仍由用户通过 pnpm approve 审阅。
+skills:
+  dirs:
+    - .agents/skills
+
+# 仅允许模板依赖中需要的安装脚本，新增依赖仍需单独审批。
+allowBuilds:
+  '@swc/core': true
+  '@weapp-tailwindcss/merge': true
+  oxc-resolver: true
+  rolldown: true
+
+  # 使用 registry 内的预编译包，避免额外下载或本机源码编译。
+  '@parcel/watcher': false
+  esbuild: false
+  weapp-tailwindcss: false
