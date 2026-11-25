@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 // 已存在的真实环境变量优先于 .env 文件中的值。
 function loadEnvFile() {
   try {
-    const content = readFileSync(resolve(__dirname, '../.env'), 'utf8')
+    const content = readFileSync(resolve(__dirname, '../../.env'), 'utf8')
     for (const line of content.split(/\r?\n/)) {
       const matched = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/.exec(line)
       if (!matched)
@@ -30,4 +30,24 @@ export const config = {
   appid: process.env.WX_APPID ?? '',
   secret: process.env.WX_SECRET ?? '',
   tokenSecret: process.env.TOKEN_SECRET ?? '',
+}
+
+/**
+ * 校验必需配置，缺失时抛出带 statusCode 500 的错误（由入口统一兜底响应）。
+ * @param {...('appid'|'secret'|'tokenSecret')} keys 该接口依赖的配置项
+ */
+export function assertConfigured(...keys) {
+  const labels = {
+    appid: 'WX_APPID',
+    secret: 'WX_SECRET',
+    tokenSecret: 'TOKEN_SECRET',
+  }
+  for (const key of keys) {
+    if (!config[key]) {
+      throw Object.assign(
+        new Error(`服务端未配置 ${labels[key]}，请复制 server/.env.example 为 server/.env 并填写`),
+        { statusCode: 500 },
+      )
+    }
+  }
 }

@@ -1,158 +1,91 @@
 <script setup lang="ts">
-import { onLoad, ref } from 'wevu'
+import { markRaw } from 'wevu'
+import { createRouter } from 'wevu/router'
 
 definePageJson({
-  navigationBarTitleText: '微信登录',
+  navigationBarTitleText: '功能测试菜单',
 })
 
-// 开发环境指向本机服务端（DevTools 需勾选「不校验合法域名」）。
-// 真机调试请改为电脑的局域网 IP，例如 http://192.168.x.x:3000；线上请使用 https 域名。
-const API_BASE = 'http://127.0.0.1:3000'
-const TOKEN_KEY = 'auth_token'
-
-interface UserInfo {
-  openid: string
-  createdAt: string
-  lastLoginAt: string
+interface MenuItem {
+  title: string
+  desc: string
+  path: string
+  tag: string
 }
 
-interface LoginResult {
-  token: string
-  openid: string
-  user: UserInfo
-}
+// 功能模块注册表：新增测试模块时，在 src/pages/<模块名>/index.vue 中实现页面，
+// 然后在这里登记一项即可（路径与自动路由 pages/<目录>/index 一致）。
+const menuItems: MenuItem[] = [
+  {
+    title: '登录与用户信息',
+    desc: 'wx.login 换 code → 服务端 code2session → JWT 登录态，以及 wx.getUserProfile 用户信息',
+    path: 'pages/login/index',
+    tag: '账号',
+  },
+  {
+    title: '设备能力',
+    desc: 'wx.getLocation 定位、wx.scanCode 扫码、wx.chooseMedia 相机与相册',
+    path: 'pages/device/index',
+    tag: '设备',
+  },
+]
 
-const phase = ref<'checking' | 'logout' | 'logined'>('checking')
-const errorMsg = ref('')
-const user = ref<UserInfo | null>(null)
+// 首次在 setup() 中创建 router 实例并注册为活动 router，
+// 后续组件/页面可用 useRouter() 获取同一实例。
+// router 内部含冻结的 options 快照（tabBarEntries 等），必须 markRaw 排除响应式包装，
+// 否则挂载时克隆快照会触发 Proxy 只读属性不变量错误。
+const router = markRaw(createRouter())
 
-function request<T>(
-  path: string,
-  options: { method?: 'GET' | 'POST', data?: unknown, token?: string } = {},
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${API_BASE}${path}`,
-      method: options.method ?? 'GET',
-      data: options.data as WechatMiniprogram.IAnyObject,
-      header: options.token ? { Authorization: `Bearer ${options.token}` } : {},
-      success: (res) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data as T)
-        }
-        else {
-          const data = res.data as { error?: string } | undefined
-          reject(new Error(data?.error ?? `HTTP ${res.statusCode}`))
-        }
-      },
-      fail: () => reject(new Error('网络请求失败，请确认服务端已启动')),
-    })
-  })
-}
-
-function wxLogin(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    wx.login({
-      success: (res) => {
-        if (res.code) {
-          resolve(res.code)
-        }
-        else {
-          reject(new Error('wx.login 未返回 code'))
-        }
-      },
-      fail: () => reject(new Error('wx.login 调用失败')),
-    })
-  })
-}
-
-// 静默登录：已有本地 token 则直接用其拉取用户信息
-async function checkLogin() {
-  const token = wx.getStorageSync(TOKEN_KEY) as string
-  if (!token) {
-    phase.value = 'logout'
-    return
-  }
+async function openModule(item: MenuItem) {
   try {
-    const data = await request<{ user: UserInfo }>('/api/user', { token })
-    user.value = data.user
-    phase.value = 'logined'
+    await router.push(item.path)
   }
-  catch {
-    // token 无效或已过期，回到未登录态
-    wx.removeStorageSync(TOKEN_KEY)
-    phase.value = 'logout'
+  catch (error) {
+    // 导航失败（如页面栈已满）时提示，不中断菜单页
+    console.error('打开模块失败:', error)
   }
 }
-
-// 完整登录：wx.login 拿 code → 服务端换 openid/session_key → 下发登录态 token
-async function handleLogin() {
-  errorMsg.value = ''
-  try {
-    const code = await wxLogin()
-    const data = await request<LoginResult>('/api/login', {
-      method: 'POST',
-      data: { code },
-    })
-    wx.setStorageSync(TOKEN_KEY, data.token)
-    user.value = data.user
-    phase.value = 'logined'
-  }
-  catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : String(err)
-  }
-}
-
-function handleLogout() {
-  wx.removeStorageSync(TOKEN_KEY)
-  user.value = null
-  phase.value = 'logout'
-}
-
-onLoad(() => {
-  void checkLogin()
-})
 </script>
 
 <template>
   <view class="page">
-    <view class="card">
-      <view v-if="phase === 'checking'" class="hint">
-        正在检查登录状态…
+    <view class="hero">
+      <view class="hero__eyebrow">
+        WeChat Mini Program Lab
       </view>
+      <view class="hero__title">
+        微信小程序功能测试台
+      </view>
+      <view class="hero__desc">
+        这里是功能导航菜单。每个功能都在独立的模块页面中实现，点开测试后可通过模块页顶部的「返回菜单」回到这里。
+      </view>
+    </view>
 
-      <template v-else-if="phase === 'logined'">
-        <view class="hero__title">
-          登录成功
+    <view class="menu">
+      <view
+        v-for="item in menuItems"
+        :key="item.path"
+        class="menu-item"
+        hover-class="menu-item--hover"
+        @tap="openModule(item)"
+      >
+        <view class="menu-item__main">
+          <view class="menu-item__title">
+            {{ item.title }}
+          </view>
+          <text class="menu-item__desc">
+            {{ item.desc }}
+          </text>
         </view>
-        <view class="hero__desc">
-          openid：{{ user?.openid }}
+        <view class="menu-item__aside">
+          <text class="menu-item__tag">
+            {{ item.tag }}
+          </text>
+          <text class="menu-item__arrow">
+            ›
+          </text>
         </view>
-        <view class="hero__desc">
-          注册时间：{{ user?.createdAt }}
-        </view>
-        <view class="hero__desc">
-          最近登录：{{ user?.lastLoginAt }}
-        </view>
-        <button class="action-btn action-btn--ghost" @tap="handleLogout">
-          退出登录
-        </button>
-      </template>
-
-      <template v-else>
-        <view class="hero__title">
-          微信登录
-        </view>
-        <view class="hero__desc">
-          点击下方按钮，使用微信账号登录本小程序。
-        </view>
-        <button class="action-btn" @tap="handleLogin">
-          微信一键登录
-        </button>
-        <view v-if="errorMsg" class="error">
-          {{ errorMsg }}
-        </view>
-      </template>
+      </view>
     </view>
   </view>
 </template>
@@ -161,53 +94,96 @@ onLoad(() => {
 .page {
   box-sizing: border-box;
   min-height: 100vh;
-  padding: 32rpx;
-  background: #f3f6fb;
+  padding: 28rpx 28rpx 40rpx;
 }
 
-.card {
-  padding: 32rpx;
-  background: #fff;
-  border: 2rpx solid #e2e8f0;
-  border-radius: 24rpx;
+.hero {
+  padding: 28rpx;
+  background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2rpx solid #bfdbfe;
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 32rpx rgb(15 23 42 / 4%);
+}
+
+.hero__eyebrow {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #1d4ed8;
 }
 
 .hero__title {
-  font-size: 36rpx;
+  margin-top: 12rpx;
+  font-size: 40rpx;
   font-weight: 700;
   color: #0f172a;
 }
 
 .hero__desc {
-  margin-top: 16rpx;
+  display: block;
+  margin-top: 12rpx;
   font-size: 24rpx;
-  line-height: 1.6;
-  color: #475569;
-  word-break: break-all;
-}
-
-.hint {
-  font-size: 26rpx;
+  line-height: 1.7;
   color: #475569;
 }
 
-.action-btn {
-  margin-top: 24rpx;
-  color: #fff;
-  background: #0f172a;
+.menu {
+  margin-top: 20rpx;
+}
+
+.menu-item {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  margin-top: 20rpx;
+  background: rgb(255 255 255 / 92%);
+  border: 2rpx solid rgb(226 232 240 / 88%);
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 32rpx rgb(15 23 42 / 4%);
+}
+
+.menu-item--hover {
+  background: #f1f5f9;
+}
+
+.menu-item__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item__title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.menu-item__desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.menu-item__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 20rpx;
+}
+
+.menu-item__tag {
+  padding: 4rpx 16rpx;
+  font-size: 20rpx;
+  color: #1d4ed8;
+  background: #dbeafe;
   border-radius: 999rpx;
 }
 
-.action-btn--ghost {
-  color: #0f172a;
-  background: #fff;
-  border: 2rpx solid #0f172a;
-}
-
-.error {
-  margin-top: 16rpx;
-  font-size: 24rpx;
-  color: #dc2626;
-  word-break: break-all;
+.menu-item__arrow {
+  margin-top: 12rpx;
+  font-size: 36rpx;
+  color: #94a3b8;
 }
 </style>

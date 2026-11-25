@@ -2,6 +2,7 @@ const CODE2SESSION_URL = 'https://api.weixin.qq.com/sns/jscode2session'
 
 /**
  * 用小程序登录凭证 code 换取 openid 与 session_key。
+ * 登录接口专属工具，其他接口如需使用请复制或沉淀到 core/。
  * 官方文档：https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html
  *
  * @param {{ appid: string, secret: string, code: string }} options

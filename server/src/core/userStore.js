@@ -1,4 +1,5 @@
 // 内存用户表：key 为 openid。
+// 供 login（写入）与 user（读取）接口共享；接口专属逻辑不要放在这里。
 // 演示用途即可满足；生产环境应替换为数据库 + Redis（session_key 不应长期驻留内存）。
 const users = new Map()
 

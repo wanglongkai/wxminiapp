@@ -10,6 +10,12 @@ defineAppJson({
   },
   style: 'v2',
   componentFramework: 'glass-easel',
+  // 定位能力需要声明用途说明，否则 wx.getLocation 会直接失败
+  permission: {
+    'scope.userLocation': {
+      desc: '用于测试定位能力，展示当前位置坐标',
+    },
+  },
   // lazyCodeLoading: 'requiredComponents',
   sitemapLocation: 'sitemap.json',
 })
