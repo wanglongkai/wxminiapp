@@ -34,3 +34,6 @@
 
 0. `weapp-vite`: https://vite.weapp.dev/
 1. `wevu`: https://vite.weapp.dev/wevu/
+
+## AppSecret
+1ca865798af4df4fcfaaf3e895e2fb48
