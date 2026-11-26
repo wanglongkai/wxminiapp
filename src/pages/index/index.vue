@@ -28,6 +28,12 @@ const menuItems: MenuItem[] = [
     path: 'pages/device/index',
     tag: '设备',
   },
+  {
+    title: '天地图 web-view',
+    desc: 'web-view 承载天地图 H5，测试 JSSDK 导航 / postMessage / 设备接口与环境探测',
+    path: 'pages/map/index',
+    tag: '网页',
+  },
 ]
 
 // 首次在 setup() 中创建 router 实例并注册为活动 router，

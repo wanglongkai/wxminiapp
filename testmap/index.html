@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>天地图 · web-view 实验台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230a1a2b' stroke='%23ffb020' stroke-width='2'/%3E%3Cpath d='M16 5l3 11-3-2-3 2z' fill='%23ffb020'/%3E%3Cpath d='M16 27l-3-11 3 2 3-2z' fill='%2338d9f5'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="grain"></div>
+
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand__mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" stroke="#ffb020" stroke-width="1.5" stroke-opacity=".7" />
+        <circle cx="20" cy="20" r="13" stroke="#38d9f5" stroke-width="1" stroke-opacity=".5" stroke-dasharray="3 3" />
+        <path d="M20 4l3.2 13.2L20 15l-3.2 2.2z" fill="#ffb020" />
+        <path d="M20 36l-3.2-13.2L20 25l3.2-2.2z" fill="#38d9f5" />
+        <circle cx="20" cy="20" r="2" fill="#ece3d2" />
+      </svg>
+      <div class="brand__text">
+        <div class="brand__title">天地图 <b>·</b> WEB-VIEW 实验台</div>
+        <div class="brand__sub">TIANDITU GEODETIC CONSOLE</div>
+      </div>
+    </div>
+
+    <div class="env-pill" id="envPill" data-env="detecting">
+      <span class="dot"></span><span id="envPillText">探测中…</span>
+    </div>
+
+    <div class="topbar__actions">
+      <button class="btn btn--sm btn--ghost" id="keyBtn" title="配置天地图密钥">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15L19 4m-3 3l2 2m-4-1l2 2"/></svg>
+        密钥
+      </button>
+    </div>
+  </header>
+
+  <!-- 工作区 -->
+  <div class="workspace">
+    <!-- 地图舞台 -->
+    <main class="stage">
+      <div id="map" class="map"></div>
+      <div class="map-vignette"></div>
+      <div class="reticle" id="reticle"><span></span></div>
+
+      <!-- 浮动工具条 -->
+      <div class="map-tools">
+        <button class="btn btn--icon" id="zoomIn" title="放大">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="btn btn--icon" id="zoomOut" title="缩小">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+        </button>
+        <div class="sep"></div>
+        <button class="btn btn--icon" id="locateBtn" title="定位到我">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>
+        </button>
+        <button class="btn btn--icon" id="crosshairBtn" title="中心十字丝" aria-pressed="false">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+        </button>
+        <button class="btn btn--icon" id="cycleLayerBtn" title="切换底图">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+        </button>
+        <div class="sep"></div>
+        <button class="btn btn--icon" id="resetViewBtn" title="重置视图">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <!-- 坐标 HUD -->
+      <div class="hud">
+        <svg class="hud__compass" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" stroke="#61788f" stroke-width="1"/>
+          <path d="M20 6l2.5 11L20 15l-2.5 2z" fill="#ff5d73"/>
+          <path d="M20 34l-2.5-11L20 25l2.5-2z" fill="#9db2ca"/>
+          <text x="20" y="5" text-anchor="middle" font-size="6" fill="#ffb020" font-family="monospace">N</text>
+        </svg>
+        <div class="hud__grid">
+          <div class="hud__item"><span class="hud__k">LNG</span><span class="hud__v" id="hudLng">—</span></div>
+          <div class="hud__item"><span class="hud__k">LAT</span><span class="hud__v" id="hudLat">—</span></div>
+          <div class="hud__item"><span class="hud__k">ZOOM</span><span class="hud__v hud__v--amber" id="hudZoom">—</span></div>
+          <div class="hud__item"><span class="hud__k">MARK</span><span class="hud__v hud__v--amber" id="hudMarkers">0</span></div>
+        </div>
+      </div>
+
+      <!-- 密钥门 / 加载 -->
+      <div class="map-overlay" id="mapOverlay">
+        <div class="gate-card" id="gateCard">
+          <h2>接入天地图</h2>
+          <p>天地图 JS API 需要开发者密钥（tk）。请前往 <a href="https://console.tianditu.gov.cn/" target="_blank" rel="noopener">天地图控制台</a> 申请「浏览器端」应用密钥，填入下方即可加载地图。密钥仅保存在本机 localStorage。</p>
+          <label class="field">
+            <span class="field__label">天地图密钥 tk</span>
+            <input class="input" id="tkInput" type="text" placeholder="例如：a1b2c3d4e5f6…" autocomplete="off" spellcheck="false" />
+          </label>
+          <button class="btn btn--amber btn--block" id="loadMapBtn">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+            加载地图
+          </button>
+          <p style="margin:14px 0 0;font-size:11.5px;color:var(--slate-dim)">提示：在小程序 web-view 中正式使用时，需将 <code style="color:var(--cyan)">api.tianditu.gov.cn</code> 与 <code style="color:var(--cyan)">t0~t7.tianditu.gov.cn</code> 配置为业务域名；开发者工具勾选「不校验合法域名」可直接调试。</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- 控制面板 -->
+    <aside class="panel" id="panel" data-collapsed="false">
+      <div class="panel-handle" id="panelHandle" title="拖动调整 / 点击折叠"></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="layers" aria-selected="true">图层视图</button>
+        <button class="tab" role="tab" data-tab="jssdk" aria-selected="false">接口调试</button>
+        <button class="tab" role="tab" data-tab="env" aria-selected="false">运行环境</button>
+        <button class="tab" role="tab" data-tab="log" aria-selected="false">消息日志</button>
+        <span class="tab-indicator" id="tabIndicator"></span>
+      </nav>
+
+      <div class="tab-body">
+        <!-- 图层视图 -->
+        <section class="tab-page" data-tab="layers" data-active="true">
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>底图类型</h3></div>
+            <div class="segmented" id="baseLayerSeg">
+              <button data-layer="vec" aria-pressed="true">矢量</button>
+              <button data-layer="img" aria-pressed="false">影像</button>
+              <button data-layer="ter" aria-pressed="false">地形</button>
+            </div>
+            <div class="switch-row" style="margin-top:12px">
+              <span class="switch-row__label">注记标注<small>道路 / 地名 / 影像注记图层</small></span>
+              <div class="switch" id="annoSwitch" role="switch" aria-checked="true" tabindex="0"></div>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>视图参数</h3></div>
+            <label class="field">
+              <span class="field__label">缩放级别 <output id="zoomOutVal">12</output></span>
+              <input class="range" id="zoomRange" type="range" min="3" max="18" step="1" value="12" />
+            </label>
+            <label class="field">
+              <span class="field__label">底图亮度 <output id="brightVal">100%</output></span>
+              <input class="range" id="brightRange" type="range" min="40" max="160" step="1" value="100" />
+            </label>
+            <label class="field">
+              <span class="field__label">底图饱和 <output id="satVal">100%</output></span>
+              <input class="range" id="satRange" type="range" min="0" max="200" step="1" value="100" />
+            </label>
+          </div>
+
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>标记管理</h3><span class="count" id="markerCount">0 个</span></div>
+            <p class="group__note">点击地图任意位置落点；或批量生成随机标记。</p>
+            <div class="row" style="margin-bottom:10px">
+              <span style="font-size:12.5px;color:var(--slate)">批量数量</span>
+              <div class="stepper" style="margin-left:auto">
+                <button id="markMinus" aria-label="减少">−</button>
+                <output id="markBatch">5</output>
+                <button id="markPlus" aria-label="增加">+</button>
+              </div>
+            </div>
+            <div class="grid-2">
+              <button class="btn btn--amber btn--sm" id="randomMarkBtn">随机落点</button>
+              <button class="btn btn--rose btn--sm" id="clearMarkBtn">清空标记</button>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>地点检索</h3></div>
+            <div class="row">
+              <input class="input grow" id="searchInput" type="text" placeholder="输入地名，如：故宫博物院" />
+              <button class="btn btn--sm" id="searchBtn">检索</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn btn--ghost btn--sm grow" id="randomViewBtn">随机视角</button>
+              <button class="btn btn--ghost btn--sm grow" id="resetViewBtn2">重置视图</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 接口调试 -->
+        <section class="tab-page" data-tab="jssdk">
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>导航接口</h3></div>
+            <p class="group__note">wx.miniProgram.* 仅在小程序 web-view 内生效，浏览器中会返回环境提示。</p>
+            <div class="api-grid">
+              <button class="api-btn api-btn--nav" data-api="navigateTo"><span class="api-btn__name">navigateTo</span><span class="api-btn__desc">跳转设备能力页</span></button>
+              <button class="api-btn api-btn--nav" data-api="navigateBack"><span class="api-btn__name">navigateBack</span><span class="api-btn__desc">返回上一页</span></button>
+              <button class="api-btn api-btn--nav" data-api="redirectTo"><span class="api-btn__name">redirectTo</span><span class="api-btn__desc">重定向登录页</span></button>
+              <button class="api-btn api-btn--nav" data-api="reLaunch"><span class="api-btn__name">reLaunch</span><span class="api-btn__desc">重启到菜单首页</span></button>
+              <button class="api-btn api-btn--nav" data-api="switchTab" style="grid-column:1/-1"><span class="api-btn__name">switchTab</span><span class="api-btn__desc">切换 tabBar（本应用无 tabBar，预期失败）</span></button>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>消息通信</h3><span class="count" id="msgCount">已发 0</span></div>
+            <p class="group__note">postMessage 的消息会在小程序后退、组件销毁、分享时由 web-view 的 message 事件统一接收。</p>
+            <label class="field">
+              <span class="field__label">消息内容 data</span>
+              <textarea class="textarea" id="msgInput" spellcheck="false">{"from":"tianditu","action":"hello"}</textarea>
+            </label>
+            <button class="btn btn--magenta btn--block" id="postMsgBtn">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+              发送 postMessage
+            </button>
+          </div>
+
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>设备 / JSSDK 接口</h3></div>
+            <div class="api-grid">
+              <button class="api-btn api-btn--dev" data-api="getEnv"><span class="api-btn__name">getEnv</span><span class="api-btn__desc">探测小程序环境</span></button>
+              <button class="api-btn api-btn--dev" data-api="getNetworkType"><span class="api-btn__name">getNetworkType</span><span class="api-btn__desc">获取网络状态</span></button>
+              <button class="api-btn api-btn--dev" data-api="getLocation"><span class="api-btn__name">getLocation</span><span class="api-btn__desc">获取地理位置</span></button>
+              <button class="api-btn api-btn--dev" data-api="openLocation"><span class="api-btn__name">openLocation</span><span class="api-btn__desc">内置地图打开地点</span></button>
+              <button class="api-btn api-btn--dev" data-api="scanQRCode"><span class="api-btn__name">scanQRCode</span><span class="api-btn__desc">调起微信扫一扫</span></button>
+              <button class="api-btn api-btn--dev" data-api="chooseImage"><span class="api-btn__name">chooseImage</span><span class="api-btn__desc">拍照 / 选图</span></button>
+              <button class="api-btn api-btn--dev" data-api="previewImage"><span class="api-btn__name">previewImage</span><span class="api-btn__desc">预览图片</span></button>
+              <button class="api-btn api-btn--dev" data-api="checkJSApi"><span class="api-btn__name">checkJSApi</span><span class="api-btn__desc">检查接口可用性</span></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 运行环境 -->
+        <section class="tab-page" data-tab="env">
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>环境探测</h3>
+              <button class="btn btn--sm btn--ghost" id="redetectBtn" style="margin-left:auto">重新探测</button>
+            </div>
+            <div id="envCards"></div>
+          </div>
+          <div class="group">
+            <div class="group__head"><span class="tick"></span><h3>User-Agent</h3></div>
+            <div class="ua-box" id="uaBox"></div>
+          </div>
+        </section>
+
+        <!-- 消息日志 -->
+        <section class="tab-page" data-tab="log">
+          <div class="log-toolbar">
+            <button class="chip" data-filter="all" aria-pressed="true">全部</button>
+            <button class="chip" data-filter="nav" aria-pressed="false">导航</button>
+            <button class="chip" data-filter="msg" aria-pressed="false">消息</button>
+            <button class="chip" data-filter="dev" aria-pressed="false">设备</button>
+            <button class="chip" data-filter="error" aria-pressed="false">错误</button>
+            <button class="btn btn--sm btn--ghost" id="clearLogBtn" style="margin-left:auto">清空</button>
+          </div>
+          <div class="log-list" id="logList">
+            <div class="log-empty" id="logEmpty">暂无日志。<br/>操作左侧接口或地图，事件会实时记录在这里。</div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <!-- 微信 JSSDK（web-view 内提供 wx.miniProgram.*） -->
+  <script src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
